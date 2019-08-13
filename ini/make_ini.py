@@ -64,7 +64,7 @@ def make_ini(rootdir='../project/',
     
     nc = netCDF4.Dataset(os.path.join(rootdir, 'shelfstrat_ini.nc'), 'w', format='NETCDF3_CLASSIC')
     nc.Description = 'Initial conditions for ideal shelf'
-    nc.Author = 'Rob Hetland'
+    nc.Author = 'Vero and Lixin'
     nc.Created = datetime.now().isoformat()
     nc.type = 'ROMS FRC file'
     
