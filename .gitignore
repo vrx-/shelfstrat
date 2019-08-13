@@ -15,3 +15,4 @@ project/Build
 project/coawst?
 ocean_shelfstrat.*
 grd.pickle
+*.DS_Store
