@@ -31,16 +31,17 @@ def make_CGrid(x, y):
     return ds
 
 
-def make_grd(rootdir='../project/',
+def make_grd(path='../project/',
              Hmin=5.0, alpha=0.001,
              ho=20., dh=0., wdh=1e4,
              f=1e-4,
              dx=1e3, dy=1e3,
-             shp=(131, 259)):
+             shp=(131, 259),
+             file=True):
 
-    if not os.path.exists(rootdir):
-        print('Making directory %s' % rootdir)
-        os.mkdir(rootdir)
+    if not os.path.exists(path):
+        print('Making directory %s' % path)
+        os.mkdir(path)
 
     x = np.arange(shp[1], dtype='d') * dx
     y = np.arange(shp[0], dtype='d') * dy
@@ -54,12 +55,16 @@ def make_grd(rootdir='../project/',
 
     # create a depth profile with slope alpha, a value of Hmin
     # and a bump localized approximately at a depth ho, as a function of step height (dh) and width (wdh).
-    cff1 = alpha * grd.y_rho + dh * np.tanh((grd.y_rho - (ho - Hmin) / alpha) / wdh * 4) + Hmin
+    cff1 = alpha * grd.y_rho + dh * np.tanh((grd.y_rho - (ho - Hmin) / alpha) / wdh * 4) + 2 * Hmin
     cff1 += 0.01 * np.random.randn(*grd.y_rho.shape) * cff1
     grd['h'] = np.maximum(cff1, Hmin)
 
-    print('Writing netcdf GRD file..')
-    grd.to_netcdf(os.path.join(rootdir, 'shelfstrat_grd.nc'))
+    if file is True:
+        print('Writing netcdf GRD file..')
+        grd.to_netcdf(os.path.join(path, 'shelfstrat_grd.nc'))
+        return
+    else:
+        return grd
 
 
 if __name__ == '__main__':
