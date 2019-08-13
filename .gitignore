@@ -8,6 +8,9 @@ sim*
 *~
 *.pdf
 *.png
+*.ipynb
+.ipynb_checkpoints/
+tests/
 project/Build
 project/coawst?
 ocean_shelfstrat.*
