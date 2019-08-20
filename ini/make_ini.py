@@ -1,15 +1,23 @@
-
 import numpy as np
-import netCDF4
+import xarray as xr
 from datetime import datetime
-import os
-
-import octant
 
 
-def make_ini(rootdir='../project/',
-             s_rho=30, theta_s=3.0, theta_b=0.4, hc=5.0,
-             Vtransform=2, Vstretching=4,
+def get_depths(h, hc, s, Cs, dim):
+    """SEE Eq. (2) or (3) on https://www.myroms.org/wiki/Vertical_S-coordinate"""
+    return (hc * s + h * Cs) / (hc + h) * h
+
+
+def C(theta_s, theta_b, s):
+    C = (1.0 - np.cosh(theta_s * s)) / (np.cosh(theta_s) - 1.0)
+    if theta_b > 0.0:
+        return (np.exp(theta_b * C) - 1.0) / (1.0 - np.exp(-theta_b))
+    else:
+        return -C
+
+
+def make_ini(grd_path='../tests/shelfstrat_grd.nc', output='../tests/shelfstrat_ini.nc',
+             zlevs=30, theta_s=3.0, theta_b=0.4, hc=5.0,
              R0=1027.0, T0=25.0, S0=35.0, TCOEF=1.7e-4, SCOEF=7.6e-4,
              M20=1e-7, M2_yo=50e3, M2_r=5e3,
              N20=1e-4, N2_zo=50.0, N2_r=50.0,
@@ -28,93 +36,49 @@ def make_ini(rootdir='../project/',
        S0 == 35.0d0                     ! PSU
     TCOEF == 1.7d-4                     ! 1/Celsius
     SCOEF == 7.6d-4                     ! 1/PSU
-
-
     '''
-
-    assert os.path.exists(rootdir), ('%s does not exist.' % rootdir)
-    grd = np.load(os.path.join(rootdir, 'grd.pickle'))
-
-    alpha = TCOEF
-    beta = SCOEF
-
-    g = 9.8
-
-    dy = grd.dy[0, 0]   # assume constant grid spacing.
+    grd = xr.open_dataset(grd_path)
+    g = 9.81
+    dy = 1 / grd.pn
+    s_w = xr.DataArray(np.linspace(-1., 0., zlevs + 1), dims=['s_w'])
+    s_rho = np.linspace(-1., 0., zlevs + 1)
+    s_rho = s_rho[:-1] + np.diff(s_rho) / 2
+    s_rho = xr.DataArray(s_rho, dims=['s_rho'])
+    Cs_r = C(theta_s, theta_b, s_rho)
+    Cs_w = C(theta_s, theta_b, s_w)
 
     M2 = M20 * np.exp((M2_yo - grd.y_rho) / M2_r)
-    M2[grd.y_rho < M2_yo] = M20
-    s = np.cumsum(M2 * dy / (g * beta), axis=0)
-    s -= s[-1] - S0
-    s = s * np.ones((s_rho, 1, 1), 'd')
-    print 'Coastal salinity: ', s.min(), ' for M2=', M20
-
-    z = octant.depths.get_zrho(Vtransform, Vstretching, s_rho, theta_s, theta_b, grd.h, hc)
-    Hz = octant.depths.get_Hz(Vtransform, Vstretching, s_rho, theta_s, theta_b, grd.h, hc)
-
+    M2 = M2.where(grd.y_rho > M2_yo, M20)
+    salt = (M2 * dy / g / SCOEF).cumsum(axis=0)
+    salt -= salt[-1] - S0
+    salt = salt.expand_dims('s_rho') * np.ones((zlevs, 1, 1), 'd')
+    salt.coords['s_rho'] = s_rho
+    # (h, hc, s, Cs)
+    z = get_depths(grd.h, hc, s_rho, Cs_r, 's_rho')
+    Hz = get_depths(grd.h, hc, s_w, Cs_w, 's_w').diff('s_w').rename({'s_w': 's_rho'})
+    Hz.coords['s_rho'] = s_rho
     N2 = N20 * np.exp(-(N2_zo - z) / N2_r)
-    N2[z < N2_zo] = N20
+    N2 = N2.where(z > N2_zo, N20)
 
-    t = np.zeros_like(s)
-    for n in range(s_rho):
-        t[n] = T0 - np.trapz(N2[n:] / (g * alpha), x=z[n:], axis=0)
+    temp = xr.zeros_like(salt)
+    for n in range(zlevs):
+        temp[n] = T0 - np.trapz(N2[n:] / (g * TCOEF), x=z[n:], axis=0)
 
     #########################################
-    # Create NetCDF file
+    # Create dataset
 
-    nc = netCDF4.Dataset(os.path.join(rootdir, 'shelfstrat_ini.nc'), 'w', format='NETCDF3_CLASSIC')
-    nc.Description = 'Initial conditions for ideal shelf'
-    nc.Author = 'Vero and Lixin'
-    nc.Created = datetime.now().isoformat()
-    nc.type = 'ROMS FRC file'
+    ds = xr.Dataset({'temp': temp, 'salt': salt,
+                     's_rho': s_rho, 'xi_rho': grd.xi_rho, 'eta_rho': grd.eta_rho})
 
-    shp = grd.x_rho.shape
-    nc.createDimension('xi_rho', shp[1])
-    nc.createDimension('eta_rho', shp[0])
-    nc.createDimension('s_rho', s_rho)
-    nc.createDimension('xi_u', shp[1] - 1)
-    nc.createDimension('eta_u', shp[0])
-    nc.createDimension('xi_v', shp[1])
-    nc.createDimension('eta_v', shp[0] - 1)
-
-    nc.createDimension('ocean_time', 1)
-    nc.createVariable('ocean_time', 'd', ('ocean_time',))
-    nc.variables['ocean_time'][0] = 0.0
-    nc.variables['ocean_time'].units = 'days'
-
-    def write_nc_var(var, name, dimensions, units=None):
-        nc.createVariable(name, 'f8', dimensions)
-        if units is not None:
-            nc.variables[name].units = units
-        nc.variables[name][:] = var
-
-    # variable_list = ('salt', 'temp', 'u', 'v', 'zeta', 'ubar', 'vbar')
-
-    write_nc_var(s, 'salt', ('ocean_time', 's_rho', 'eta_rho', 'xi_rho'), 'PSU')
-    write_nc_var(t, 'temp', ('ocean_time', 's_rho', 'eta_rho', 'xi_rho'), 'degC')
-
-    if balanced_run:
-        rhs = M2 * Hz / grd.f
-        u_z = 0.5 * (rhs[:, :, 1:] + rhs[:, :, :-1])
-        u = np.cumsum(u_z, axis=0)
-        ubottom = np.zeros((1, u.shape[1], u.shape[2]))
-        u = np.concatenate((ubottom, u))
-        u = 0.5 * (u[1:] + u[:-1])
-    else:
-        u = 0
-
-    write_nc_var(u, 'u', ('ocean_time', 's_rho', 'eta_u', 'xi_u'), 'm s-1')
-    write_nc_var(0.0, 'v', ('ocean_time', 's_rho', 'eta_v', 'xi_v'), 'm s-1')
-
-    write_nc_var(0.0, 'zeta', ('ocean_time', 'eta_rho', 'xi_rho'), 'm')
-    write_nc_var(0.0, 'ubar', ('ocean_time', 'eta_u', 'xi_u'), 'm s-1')
-    write_nc_var(0.0, 'vbar', ('ocean_time', 'eta_v', 'xi_v'), 'm s-1')
-
-    nc.close()
+    ds.attrs['Description'] = 'Initial conditions for ideal shelf'
+    ds.attrs['Author'] = 'Vero and Lixin'
+    ds.attrs['Created'] = datetime.now().isoformat()
+    ds.attrs['type'] = 'ROMS FRC file'
+    ds['ocean_time'] = xr.DataArray([0.0], dims=['ocean_time'])
+    ds['ocean_time'].attrs['units'] = 'days'
+    print('Writing netcdf INI file..')
+    ds.to_netcdf(output)
 
 
 if __name__ == '__main__':
-    from os.path import expanduser
-    home = expanduser("~")
-
-    make_ini(rootdir=os.path.join(home, 'Projects/shelfstrat/project/test'))
+    make_ini()
