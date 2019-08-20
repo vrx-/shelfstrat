@@ -64,7 +64,6 @@ def make_ini(grd_path='../tests/shelfstrat_grd.nc', output='../tests/shelfstrat_
     for n in range(zlevs):
         temp[n] = T0 - np.trapz(N2[n:] / (g * TCOEF), x=z[n:], axis=0)
 
-    #########################################
     # Create dataset
 
     ds = xr.Dataset({'temp': temp, 'salt': salt,
