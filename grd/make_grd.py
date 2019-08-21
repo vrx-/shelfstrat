@@ -1,7 +1,29 @@
 """ This script creates a grid file for an idealized near-field plume case to evaluate bottom traping by a bump
 """
+import os
 import numpy as np
 import xarray as xr
+
+
+def make_grd(output='../tests/shelfstrat_grd.nc',
+             Hmin=5.0, alpha=0.001,
+             ho=20., dh=0., wdh=1e4,
+             f=1e-4,
+             dx=1e3, dy=1e3,
+             shp=(131, 259)):
+
+    x = np.arange(shp[1], dtype='d') * dx
+    y = np.arange(shp[0], dtype='d') * dy
+    xvert, yvert = np.meshgrid(x, y)
+    grd = make_CGrid(xvert, yvert)
+    grd['f'] = f
+    # create a depth profile with slope alpha, a value of Hmin
+    # and a bump localized approximately at a depth ho, as a function of step height (dh) and width (wdh).
+    cff1 = alpha * grd.y_rho + dh * np.tanh((grd.y_rho - (ho - Hmin) / alpha) / wdh * 4) + 2 * Hmin
+    cff1 += 0.01 * np.random.randn(*grd.y_rho.shape) * cff1
+    grd['h'] = np.maximum(cff1, Hmin)
+    print('Writing netcdf GRD file..')
+    grd.to_netcdf(output)
 
 
 def make_CGrid(x, y):
@@ -33,26 +55,5 @@ def make_CGrid(x, y):
     return ds
 
 
-def make_grd(output,
-             Hmin=5.0, alpha=0.001,
-             ho=20., dh=0., wdh=1e4,
-             f=1e-4,
-             dx=1e3, dy=1e3,
-             shp=(131, 259)):
-
-    x = np.arange(shp[1], dtype='d') * dx
-    y = np.arange(shp[0], dtype='d') * dy
-    xvert, yvert = np.meshgrid(x, y)
-    grd = make_CGrid(xvert, yvert)
-    grd['f'] = f
-    # create a depth profile with slope alpha, a value of Hmin
-    # and a bump localized approximately at a depth ho, as a function of step height (dh) and width (wdh).
-    cff1 = alpha * grd.y_rho + dh * np.tanh((grd.y_rho - (ho - Hmin) / alpha) / wdh * 4) + 2 * Hmin
-    cff1 += 0.01 * np.random.randn(*grd.y_rho.shape) * cff1
-    grd['h'] = np.maximum(cff1, Hmin)
-    print('Writing netcdf GRD file..')
-    grd.to_netcdf(output)
-
-
 if __name__ == '__main__':
-    make_grd('../tests/shelfstrat_grd.nc')
+    make_grd(output='../tests/shelfstrat_grd.nc')

@@ -13,6 +13,7 @@ sim*
 tests/
 project/Build
 project/coawst?
+runs/
 ocean_shelfstrat.*
 grd.pickle
 .DS_Store

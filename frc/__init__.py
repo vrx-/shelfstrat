@@ -8,4 +8,4 @@ Copyright (c) 2013 Texas A&M Univsersity. All rights reserved.
 Release under MIT license.
 """
 
-from make_frc import make_frc
+from frc.make_frc import make_frc

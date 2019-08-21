@@ -8,4 +8,4 @@ Copyright (c) 2013 Texas A&M Univsersity. All rights reserved.
 Release under MIT license.
 """
 
-from make_ini import make_ini
+from ini.make_ini import make_ini
