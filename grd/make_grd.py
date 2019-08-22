@@ -42,10 +42,6 @@ def make_grd(output='../tests/shelfstrat_grd.nc',
     grd.h.attrs['long_name'] = 'Final bathymetry at RHO-points'
     grd.h.attrs['units'] = 'meter'
     grd.h.attrs['field'] = 'bath, scalar'
-    grd['mask_rho'] = grd.mask_rho
-    grd.mask_rho.attrs['long_name'] = 'Final bathymetry at RHO-points'
-    grd.mask_rho.attrs['units'] = 'meter'
-    grd.mask_rho.attrs['field'] = 'bath, scalar'
     print('Writing netcdf GRD file..')
     grd.to_netcdf(output)
 
