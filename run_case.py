@@ -52,7 +52,7 @@ class ROMS_in(object):
 
 def run_case(case, z0=0.003, dt=30.0, exec=False, rootdir='runs/'):
 
-    print('BUILD case ID %s', case['ID'])
+    print('BUILD case ID %s' % case['ID'])
     if not os.path.exists(rootdir):
         os.makedirs(rootdir)
     grd_name = rootdir + 'shelf_' + case['ID'] + '_grd.nc'
@@ -117,7 +117,7 @@ def run_case(case, z0=0.003, dt=30.0, exec=False, rootdir='runs/'):
 
     rin_3d['Zob'] = z0
     rin_3d.write(infile)
-    print('RUN case ID %s', case['ID'])
+    print('RUN case ID %s' % case['ID'])
     print(infile)
 
     if exec:
