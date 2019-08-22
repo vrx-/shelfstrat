@@ -50,7 +50,7 @@ class ROMS_in(object):
         self.variables[key] = str(val)
 
 
-def run_case(case, z0=0.003, dt=30.0, exec=False, rootdir='runs/'):
+def run_case(case, z0=0.003, dt=30.0, exec=False, rootdir='/scratch/user/vrx/shelfstrat/runs/'):
 
     print('BUILD case ID %s' % case['ID'])
     if not os.path.exists(rootdir):
@@ -94,18 +94,18 @@ def run_case(case, z0=0.003, dt=30.0, exec=False, rootdir='runs/'):
     infile = os.path.join(rootdir, 'ocean_shelf_' + case['ID'] + '.in')
     outfile = os.path.join(rootdir, 'ocean_shelf_' + case['ID'] + '.out')
     # run 3D case
-    rin_3d = ROMS_in('./project/ocean_shelfstrait.in')
-    rin_3d['GRDNAME'] = os.path.join(rootdir, grd_name)
-    rin_3d['FRCNAME'] = os.path.join(rootdir, frc_name)
+    rin_3d = ROMS_in('/scratch/user/vrx/shelfstrat/project/ocean_shelfstrait.in')
+    rin_3d['GRDNAME'] = grd_name
+    rin_3d['FRCNAME'] = frc_name
     rin_3d['HISNAME'] = os.path.join(rootdir, 'shelf_' + case['ID'] + '_his.nc')
     rin_3d['AVGNAME'] = os.path.join(rootdir, 'shelf_' + case['ID'] + '_avg.nc')
     rin_3d['DIANAME'] = os.path.join(rootdir, 'shelf_' + case['ID'] + '_dia.nc')
-    rin_3d['ININAME'] = os.path.join(rootdir, ini_name)
+    rin_3d['ININAME'] = ini_name
     rin_3d['RSTNAME'] = os.path.join(rootdir, 'shelf_' + case['ID'] + '_rst.nc')
-    rin_3d['VARNAME'] = './project/varinfo.dat'
+    rin_3d['VARNAME'] = '/scratch/user/vrx/shelfstrat/project/varinfo.dat'
 
-    rin_3d['Lm'] = case['grd']['shp'][1]
-    rin_3d['Mm'] = case['grd']['shp'][0]
+    rin_3d['Lm'] = case['grd']['shp'][1] - 3
+    rin_3d['Mm'] = case['grd']['shp'][0] - 3
     rin_3d['N'] = case['ini']['zlevs']
 
     rin_3d['NTIMES'] = int(86400 * case['frc']['ndays'] / dt)

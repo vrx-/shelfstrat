@@ -70,6 +70,8 @@ def make_ini(output='../tests/shelfstrat_ini.nc',
                      's_rho': s_rho, 'xi_rho': grd.xi_rho, 'eta_rho': grd.eta_rho})
 
     ds['zeta'] = xr.zeros_like(ds.temp)
+    ds['ubar'] = xr.zeros_like(grd.xi_u)
+    ds['vbar'] = xr.zeros_like(grd.xi_v)
     ds.attrs['Description'] = 'Initial conditions for ideal shelf'
     ds.attrs['Author'] = 'Vero and Lixin'
     ds.attrs['Created'] = datetime.now().isoformat()

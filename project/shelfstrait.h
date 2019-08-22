@@ -11,7 +11,7 @@
 #define SPLINES_VVISC
 #define SPLINES_VDIFF
 #undef SPLINES
-#define MASKING
+#undef MASKING
 
 #define DIAGNOSTICS_TS
 #define DIAGNOSTICS_UV
