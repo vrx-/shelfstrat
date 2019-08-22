@@ -73,7 +73,7 @@
 ! Input variable information file name.  This file needs to be processed
 ! first so all information arrays can be initialized properly.
 
-     VARNAME = /home/lixinqu/scratch/projects/project_shelfstrait/project/varinfo.dat
+     VARNAME = varinfo.dat
 
 ! Number of nested grids.
 

@@ -1,3 +1,4 @@
+#define ROMS_MODEL
 #define SHELFSTRAIT
 
 #define UV_ADV
@@ -7,7 +8,9 @@
 
 #define SALINITY
 #define SOLVE3D
-#define SPLINES
+#define SPLINES_VVISC
+#define SPLINES_VDIFF
+#undef SPLINES
 #define MASKING
 
 #define DIAGNOSTICS_TS
