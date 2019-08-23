@@ -21,7 +21,8 @@ def make_ini(output='../tests/shelfstrat_ini.nc',
              zlevs=30, theta_s=3.0, theta_b=0.4, hc=5.0,
              R0=1027.0, T0=25.0, S0=35.0, TCOEF=1.7e-4, SCOEF=7.6e-4,
              M20=1e-7, M2_yo=50e3, M2_r=5e3,
-             N20=1e-4, N2_zo=50.0, N2_r=50.0,):
+             N20=1e-4, N2_zo=50.0, N2_r=50.0,
+             balanced_run: True):
     '''
     Create an initialization file.
 
@@ -69,9 +70,31 @@ def make_ini(output='../tests/shelfstrat_ini.nc',
     ds = xr.Dataset({'temp': temp, 'salt': salt,
                      's_rho': s_rho, 'xi_rho': grd.xi_rho, 'eta_rho': grd.eta_rho})
 
-    ds['zeta'] = xr.zeros_like(ds.temp)
-    ds['ubar'] = xr.zeros_like(grd.xi_u)
-    ds['vbar'] = xr.zeros_like(grd.xi_v)
+    if balanced_run:
+        rhs = M2 * Hz / grd.f
+        u_z = 0.5 * (rhs[:, :, 1:] + rhs[:, :, :-1])
+        u = np.cumsum(u_z, axis=0)
+        ubottom = np.zeros((1, u.shape[1], u.shape[2]))
+        u = np.concatenate((ubottom, u))
+        u = 0.5 * (u[1:] + u[:-1])
+    else:
+        u = 0
+
+    ds['u'] = xr.DataArray(u[np.newaxis, :, :, :],
+                           dims=['ocean_time', 's_rho', 'eta_u', 'xi_u'],
+                           attrs={'units': 'm s-1'})
+    ds['v'] = xr.DataArray(np.zeros((1, int(zlevs), grd.dims['eta_v'], grd.dims['xi_v'])),
+                           dims=['ocean_time', 's_rho', 'eta_v', 'xi_v'],
+                           attrs={'units': 'm s-1'})
+    ds['zeta'] = xr.DataArray(np.zeros((1, grd.dims['eta_rho'], grd.dims['xi_rho'])),
+                              dims=['ocean_time', 'eta_rho', 'xi_rho'],
+                              attrs={'units': 'm'})
+    ds['ubar'] = xr.DataArray(np.zeros((1, grd.dims['eta_u'], grd.dims['xi_u'])),
+                              dims=['ocean_time', 'eta_u', 'xi_u'],
+                              attrs={'units': 'm s-1'})
+    ds['vbar'] = xr.DataArray(np.zeros((1, grd.dims['eta_v'], grd.dims['xi_v'])),
+                              dims=['ocean_time', 'eta_v', 'xi_v'],
+                              attrs={'units': 'm s-1'})
     ds.attrs['Description'] = 'Initial conditions for ideal shelf'
     ds.attrs['Author'] = 'Vero and Lixin'
     ds.attrs['Created'] = datetime.now().isoformat()
