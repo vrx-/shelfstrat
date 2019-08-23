@@ -10,6 +10,7 @@ sim*
 *.png
 *.ipynb
 .ipynb_checkpoints/
+*.slurm
 tests/
 project/Build
 project/coawst?
