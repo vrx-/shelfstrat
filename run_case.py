@@ -74,7 +74,7 @@ def run_case(case, z0=0.003, dt=30.0, exec=False, rootdir='/scratch/user/vrx/she
              v=case['frc']['v'],
              Tramp=case['frc']['Tramp'],
              Cd=case['frc']['Cd'])
-    make_ini(ini_name, grd_path=grd_name,
+    make_ini(ini_name, grd_name,
              zlevs=case['ini']['zlevs'],
              theta_s=case['ini']['theta_s'],
              theta_b=case['ini']['theta_b'],

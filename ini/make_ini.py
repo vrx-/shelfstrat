@@ -16,7 +16,7 @@ def C(theta_s, theta_b, s):
         return -C
 
 
-def make_ini(grd_path='../tests/shelfstrat_grd.nc', output='../test/shelfstrat_ini.nc',
+def make_ini(output='../test/shelfstrat_ini.nc', grd_path='../tests/shelfstrat_grd.nc',
              zlevs=30, theta_s=3.0, theta_b=0.4, hc=5.0,
              R0=1027.0, T0=25.0, S0=35.0, TCOEF=1.7e-4, SCOEF=7.6e-4,
              M20=1e-7, M2_yo=50e3, M2_r=5e3,
