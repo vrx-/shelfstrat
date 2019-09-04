@@ -15,6 +15,9 @@ tests/
 project/Build
 project/coawst?
 runs/
+copy/
 ocean_shelfstrat.*
 grd.pickle
+Shelf_Out*
+nohup*
 .DS_Store

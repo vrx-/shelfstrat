@@ -50,7 +50,7 @@ class ROMS_in(object):
         self.variables[key] = str(val)
 
 
-def run_case(case, z0=0.003, dt=30.0, exec=False, rootdir='/scratch/user/vrx/shelfstrat/runs/'):
+def run_case(case, z0=0.003, dt=15.0, exec=False, rootdir='/scratch/user/vrx/shelfstrat/runs/'):
 
     print('BUILD case ID %s' % case['ID'])
     if not os.path.exists(rootdir):
@@ -139,10 +139,10 @@ if __name__ == '__main__':
                     'f': 1e-4,
                     'dx': .5e3,
                     'dy': .5e3,
-                    'shp': (224+3, 448+3),
+                    'shp': (252+3, 512+3),
                     },
             'frc': {'u': 0.,
-                    'v': 5.,
+                    'v': 2.,
                     'Tramp': 1.,
                     'Cd': 1.5e-3,
                     'ndays': 365,
