@@ -25,15 +25,31 @@ class ROMS_in(object):
 
         self.variables = {}
         self._varlist = []       # to keep the order of variables
-
+        same = False
         for line in f.readlines():
-            # strip comments
-            s = line.split('!')[0].strip()
-            if len(s) == 0:
-                continue     # comment only
-            vals = s.split('=')
-            self.variables[vals[0].strip()] = vals[-1].strip()
-            self._varlist.append(vals[0].strip())
+            if '!' not in line[0]:
+                if '=' in line:
+                    vals = line.split('=')
+                    varname = vals[0].strip()
+                    self._varlist.append(varname)
+                    varval = vals[-1].strip()
+                elif same:
+                    varval = varval+'\n' +  line
+                else:
+                    varname = 'none'
+                    varval = 'none'
+                if '\\' in line.split('!')[0]:
+                    same = True
+                else:
+                    same = False        
+                self.variables[varname] = varval
+            # # strip comments
+            # s = line.split('!')[0].strip()
+            # if len(s) == 0:
+            #     continue     # comment only
+            # vals = s.split('=')
+            # self.variables[vals[0].strip()] = vals[-1].strip()
+            # self._varlist.append(vals[0].strip())
 
     def write(self, filename):
         """docstring for write"""
@@ -130,11 +146,11 @@ def run_case(case, z0=0.003, dt=15.0, exec=False, rootdir='/scratch/user/vrx/she
 
 if __name__ == '__main__':
 
-    case = {'ID': 'ho_5_wdh_1e4',
+    case = {'ID': 'ho_20_dh_10_wdh_1e4',
             'grd': {'Hmin': 5.0,
                     'alpha': 0.001,
-                    'ho': 5.,
-                    'dh': 0.,
+                    'ho': 20.,
+                    'dh': 10.,
                     'wdh': 1e4,
                     'f': 1e-4,
                     'dx': .5e3,
@@ -156,7 +172,7 @@ if __name__ == '__main__':
                     'S0': 35.,
                     'TCOEF': 1.7e-4,
                     'SCOEF': 7.6e-4,
-                    'M20': 1e-7,
+                    'M20': 1e-6,
                     'M2_yo': 50e3,
                     'M2_r': 5e3,
                     'N20': 1e-4,

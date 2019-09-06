@@ -19,7 +19,7 @@ def C(theta_s, theta_b, s):
 def make_ini(output='../test/shelfstrat_ini.nc', grd_path='../tests/shelfstrat_grd.nc',
              zlevs=30, theta_s=3.0, theta_b=0.4, hc=5.0,
              R0=1027.0, T0=25.0, S0=35.0, TCOEF=1.7e-4, SCOEF=7.6e-4,
-             M20=1e-7, M2_yo=50e3, M2_r=5e3,
+             M20=1e-6, M2_yo=50e3, M2_r=5e3,
              N20=1e-4, N2_zo=50.0, N2_r=50.0,
              balanced_run=True):
     '''
@@ -104,7 +104,7 @@ def make_ini(output='../test/shelfstrat_ini.nc', grd_path='../tests/shelfstrat_g
     ds.attrs['Description'] = 'Initial conditions for ideal shelf'
     ds.attrs['Author'] = 'Vero and Lixin'
     ds.attrs['Created'] = datetime.now().isoformat()
-    print('Writing netcdf INI file..')
+    print('Writing netcdf INI file: '+output)
     ds.to_netcdf(output)
 
 
