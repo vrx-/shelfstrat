@@ -15,6 +15,20 @@ def C(theta_s, theta_b, s):
     else:
         return -C
 
+def ox_sat(temp, salt):
+    A1 = -173.4292
+    A2 =  249.6339
+    A3 =  143.3483
+    A4 =  -21.8492
+    B1 =   -0.033096
+    B2 =    0.014259
+    B3 =   -0.0017000
+
+    Tk = temp + 273.15 #     Convert temperature to Deg. Kelvin
+    #Calculate saturation O2.
+    return np.exp(A1 + A2 * (100.0 / Tk) + A3 * np.log(Tk / 100.0) + A4 * (Tk / 100.0) +
+                  salt * (B1 + B2 * (Tk / 100.0) + B3 * ((Tk / 100.0)**2))) * 44.661
+
 
 def make_ini(output='../test/shelfstrat_ini.nc', grd_path='../tests/shelfstrat_grd.nc',
              zlevs=30, theta_s=3.0, theta_b=0.4, hc=5.0,
@@ -99,6 +113,7 @@ def make_ini(output='../test/shelfstrat_ini.nc', grd_path='../tests/shelfstrat_g
     ds['vbar'] = xr.DataArray(np.zeros((1, grd.dims['eta_v'], grd.dims['xi_v'])),
                               dims=['ocean_time', 'eta_v', 'xi_v'],
                               attrs={'units': 'm s-1'})
+    ds['dye_01'] = ox_sat(ds.temp, ds.salt)
 
     ds.attrs['type'] = 'ROMS FRC file'
     ds.attrs['Description'] = 'Initial conditions for ideal shelf'

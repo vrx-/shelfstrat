@@ -43,13 +43,6 @@ class ROMS_in(object):
                 else:
                     same = False        
                 self.variables[varname] = varval
-            # # strip comments
-            # s = line.split('!')[0].strip()
-            # if len(s) == 0:
-            #     continue     # comment only
-            # vals = s.split('=')
-            # self.variables[vals[0].strip()] = vals[-1].strip()
-            # self._varlist.append(vals[0].strip())
 
     def write(self, filename):
         """docstring for write"""
@@ -66,7 +59,7 @@ class ROMS_in(object):
         self.variables[key] = str(val)
 
 
-def run_case(case, z0=0.003, dt=15.0, exec=False, rootdir='/scratch/user/vrx/shelfstrat/runs/'):
+def run_case(case, z0=0.003, dt=15.0, save=False, rootdir='./runs/'):
 
     print('BUILD case ID %s' % case['ID'])
     if not os.path.exists(rootdir):
@@ -88,7 +81,10 @@ def run_case(case, z0=0.003, dt=15.0, exec=False, rootdir='/scratch/user/vrx/she
     make_frc(frc_name,
              u=case['frc']['u'],
              v=case['frc']['v'],
+             ndays=case['frc']['ndays'],
+             dtw = case['frc']['dtw'],
              Tramp=case['frc']['Tramp'],
+             Tflat=case['frc']['Tflat'],
              Cd=case['frc']['Cd'])
     make_ini(ini_name, grd_name,
              zlevs=case['ini']['zlevs'],
@@ -111,7 +107,7 @@ def run_case(case, z0=0.003, dt=15.0, exec=False, rootdir='/scratch/user/vrx/she
     infile = os.path.join(rootdir, 'ocean_shelf_' + case['ID'] + '.in')
     outfile = os.path.join(rootdir, 'ocean_shelf_' + case['ID'] + '.out')
     # run 3D case
-    rin_3d = ROMS_in('/scratch/user/vrx/shelfstrat/project/ocean_shelfstrait.in')
+    rin_3d = ROMS_in('./project/ocean_shelfstrait.in')
     rin_3d['GRDNAME'] = grd_name
     rin_3d['FRCNAME'] = frc_name
     rin_3d['HISNAME'] = os.path.join(rootdir, 'shelf_' + case['ID'] + '_his.nc')
@@ -119,7 +115,7 @@ def run_case(case, z0=0.003, dt=15.0, exec=False, rootdir='/scratch/user/vrx/she
     rin_3d['DIANAME'] = os.path.join(rootdir, 'shelf_' + case['ID'] + '_dia.nc')
     rin_3d['ININAME'] = ini_name
     rin_3d['RSTNAME'] = os.path.join(rootdir, 'shelf_' + case['ID'] + '_rst.nc')
-    rin_3d['VARNAME'] = '/scratch/user/vrx/shelfstrat/project/varinfo.dat'
+    rin_3d['VARNAME'] = './project/varinfo.dat'
 
     rin_3d['Lm'] = case['grd']['shp'][1] - 3
     rin_3d['Mm'] = case['grd']['shp'][0] - 3
@@ -137,7 +133,7 @@ def run_case(case, z0=0.003, dt=15.0, exec=False, rootdir='/scratch/user/vrx/she
     print('RUN case ID %s' % case['ID'])
     print(infile)
 
-    if exec:
+    if save:
         print(' ### Running 3D ROMS...')
         os.system('/usr/mpi/gcc/openmpi-1.4.3/bin/mpiexec -np 8 ./project/coawstM %s > %s &' % (infile, outfile))
 
@@ -146,22 +142,25 @@ def run_case(case, z0=0.003, dt=15.0, exec=False, rootdir='/scratch/user/vrx/she
 
 if __name__ == '__main__':
 
-    case = {'ID': 'rob_base',
+    case = {'ID': 'rob_dye',
             'grd': {'Hmin': 5.0,
                     'alpha': 0.001,
                     'ho': 5.,
                     'dh': 0.,
                     'wdh': 1e4,
                     'f': 1e-4,
-                    'dx': .5e3,
-                    'dy': .5e3,
-                    'shp': (252+3, 512+3),
+                    'dx': 1e3,
+                    'dy': 1e3,
+                    'shp': (126+3, 256+3),
                     },
             'frc': {'u': 0.,
                     'v': 0.,
-                    'Tramp': 1.,
                     'Cd': 1.5e-3,
-                    'ndays': 365,
+                    'Rho0': 1027.,
+                    'ndays': 60,
+                    'dtw': 1/24,
+                    'Tramp': 3.,
+                    'Tflat': 3.,
                     },
             'ini': {'zlevs': 30,
                     'theta_s': 3.,

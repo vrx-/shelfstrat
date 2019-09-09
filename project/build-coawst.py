@@ -66,7 +66,7 @@ def main(argv=None):
     if 'ROMS_ROOT_DIR' in os.environ:
         ROMS_ROOT_DIR = os.environ['ROMS_ROOT_DIR']
     else:
-        ROMS_ROOT_DIR = os.path.join(os.environ['HOME'], '/Users/vrx/Projects/COAWST')
+        ROMS_ROOT_DIR = os.path.join(os.environ['HOME'], '/raid/home/vrx/COSMIO/COAWST')
 
     USE_MPI = 'on'
     USE_MPIF90 = 'on'

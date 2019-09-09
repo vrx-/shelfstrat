@@ -5,14 +5,16 @@ from datetime import datetime
 
 
 def make_frc(output='../tests/shelfstrat_frc.nc',
-             u=0.0, v=5.0, Tramp=1.0, Cd=1.5e-3, ndays=365.):
+             u=0.0, v=5.0, Cd=1.5e-3, Rho0=1027.,
+             ndays=30, dtw=1 / 24, Tramp=3.0, Tflat=3.):
 
-    sustr0 = Cd * np.sqrt(u**2 + v**2) * u
-    svstr0 = Cd * np.sqrt(u**2 + v**2) * v
-    t = xr.DataArray(np.linspace(0, ndays, ndays * 24 * 4), dims=['sms_time'])
+    sustr0 = Cd / Rho0 * np.sqrt(u**2 + v**2) * u
+    svstr0 = Cd / Rho0 * np.sqrt(u**2 + v**2) * v
+    t = xr.DataArray(np.arange(0, ndays+dtw, dtw), dims=['sms_time'])
     ramp = (1.0 - np.exp(-t / Tramp)) * np.sin(t * 2.0 * np.pi)
-    sustr = xr.DataArray(sustr0 * ramp, dims=['sms_time'])
-    svstr = xr.DataArray(svstr0 * ramp, dims=['sms_time'])
+    nt = int(Tflat / dtw)
+    sustr = xr.DataArray(sustr0 * np.insert(ramp, 0, np.zeros(nt))[:-nt], dims=['sms_time'])
+    svstr = xr.DataArray(svstr0 * np.insert(ramp, 0, np.zeros(nt))[:-nt], dims=['sms_time'])
 
     # Create dataset
 
@@ -26,7 +28,7 @@ def make_frc(output='../tests/shelfstrat_frc.nc',
     ds['sustr'].attrs['units'] = 'Newton meter-2'
     ds['svstr'].attrs['units'] = 'Newton meter-2'
 
-    print('Writing netcdf FRC file..')
+    print('Writing netcdf FRC file: '+output)
     ds.to_netcdf(output)
 
 

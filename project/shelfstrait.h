@@ -31,3 +31,8 @@
 #define ANA_SSFLUX
 #define ANA_BTFLUX
 #define ANA_BSFLUX
+
+#define T_PASSIVE
+#define ANA_SPFLUX
+#define ANA_BPFLUX
+#define BH_BOTTOM_RESP
