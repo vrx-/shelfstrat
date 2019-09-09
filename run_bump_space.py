@@ -58,7 +58,7 @@ def set_case(case, z0=0.003, dt=60.0, save=False, rootdir='./runs/'):
     frc_str = 'vwind_' + str(int(case['frc']['vwind']))
     ID = grd_str + '_' + frc_str
     grd_name = rootdir + 'shelf_' + grd_str + '_grd.nc'
-    frc_name = rootdir + 'shelf_' + '_frc.nc'
+    frc_name = rootdir + 'shelf_' + frc_str + '_frc.nc'
     ini_name = rootdir + 'shelf_' + ID + '_ini.nc'
 
     if not os.path.isfile(grd_name):
@@ -170,13 +170,13 @@ dh_list = [1., 5., 10., 15., 20., ]
 ho_list = [20., 50, ]
 wind_list = [0., 2., 5., 10 ]
 
-for v in wind_list:
+for vwind in wind_list:
     for ho in ho_list:
         for dh in dh_list:
             case = base_case.copy()
             case['grd']['ho'] = ho
             case['grd']['dh'] = dh
-            case['frc']['v'] = v
-            case['ID'] = 'ho_'+str(int(ho))+'_dh_'+str(int(dh))+'_wind_'+str(int(v))
+            case['frc']['vwind'] = vwind
+            case['ID'] = 'ho_'+str(int(ho))+'_dh_'+str(int(dh))+'_wind_'+str(int(vwind))
 
             set_case(case)
