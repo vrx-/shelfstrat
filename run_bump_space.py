@@ -1,20 +1,9 @@
-#!/bin/env python3.7
-# encoding: utf-8
-"""
-run_case.py
-
-Created by Rob Hetland on 2007-10-15.
-Modified by Veronica Ruiz Xomchuk on 2019-08
-Copyright (c) 2019 Texas A&M Univsersity. All rights reserved.
-Release under MIT license.
-"""
 from grd import make_grd
 from frc import make_frc
 from ini import make_ini
 
 import os
 import warnings
-
 
 class ROMS_in(object):
     """docstring for ROMS_IN"""
@@ -59,7 +48,7 @@ class ROMS_in(object):
         self.variables[key] = str(val)
 
 
-def run_case(case, z0=0.003, dt=60.0, save=False, rootdir='./runs/'):
+def set_case(case, z0=0.003, dt=60.0, save=False, rootdir='./runs/'):
 
     print('BUILD new case' )
     if not os.path.exists(rootdir):
@@ -139,50 +128,53 @@ def run_case(case, z0=0.003, dt=60.0, save=False, rootdir='./runs/'):
     print('RUN case ID %s' % ID)
     print(infile)
 
-    if save:
-        print(' ### Running 3D ROMS...')
-        os.system('/usr/mpi/gcc/openmpi-1.4.3/bin/mpiexec -np 8 ./project/coawstM %s > %s &' % (infile, outfile))
 
-    return
+base_case = {'ID': 'ho_5_wdh_1e4',
+        'grd': {'Hmin': 5.0,
+                'alpha': 0.001,
+                'ho': 5.,
+                'dh': 0.,
+                'wdh': 1e4,
+                'f': 1e-4,
+                'dx': .5e3,
+                'dy': .5e3,
+                'shp': (252+3, 512+3),
+                },
+        'frc': {'u': 0.,
+                'v': 2.,
+                'Tramp': 1.,
+                'Cd': 1.5e-3,
+                'ndays': 365,
+                },
+        'ini': {'zlevs': 30,
+                'theta_s': 3.,
+                'theta_b': .4,
+                'hc': 5.,
+                'R0': 1027.,
+                'T0': 25.,
+                'S0': 35.,
+                'TCOEF': 1.7e-4,
+                'SCOEF': 7.6e-4,
+                'M20': 1e-6,
+                'M2_yo': 50e3,
+                'M2_r': 5e3,
+                'N20': 1e-4,
+                'N2_zo': 50.,
+                'N2_r': 50.,
+                },
+        }
 
+dh_list = [1., 5., 10., 15., 20., ]
+ho_list = [20., 50, ]
+wind_list = [0., 2., 5., 10 ]
 
-if __name__ == '__main__':
+for v in wind_list:
+    for ho in ho_list:
+        for dh in dh_list:
+            case = base_case.copy()
+            case['grd']['ho'] = ho
+            case['grd']['dh'] = dh
+            case['frc']['v'] = v
+            case['ID'] = 'ho_'+str(int(ho))+'_dh_'+str(int(dh))+'_wind_'+str(int(v))
 
-    case = {'grd': {'Hmin': 5.0,
-                    'alpha': 0.001,
-                    'ho': 5.,
-                    'dh': 0.,
-                    'wdh': 1e4,
-                    'f': 1e-4,
-                    'dx': 1e3,
-                    'dy': 1e3,
-                    'shp': (126+3, 256+3),
-                    },
-            'frc': {'uwind': 0.,
-                    'vwind': 0.,
-                    'Cd': 1.5e-3,
-                    'Rho0': 1027.,
-                    'ndays': 60,
-                    'dtw': 1/24,
-                    'Tramp': 3.,
-                    'Tflat': 3.,
-                    },
-            'ini': {'zlevs': 30,
-                    'theta_s': 3.,
-                    'theta_b': .4,
-                    'hc': 5.,
-                    'R0': 1027.,
-                    'T0': 25.,
-                    'S0': 35.,
-                    'TCOEF': 1.7e-4,
-                    'SCOEF': 7.6e-4,
-                    'M20': 1e-6,
-                    'M2_yo': 50e3,
-                    'M2_r': 5e3,
-                    'N20': 1e-4,
-                    'N2_zo': 50.,
-                    'N2_r': 50.,
-                    },
-            }
-
-    run_case(case)
+            set_case(case)

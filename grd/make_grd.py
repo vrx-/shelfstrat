@@ -30,7 +30,7 @@ def make_grd(output='../tests/shelfstrat_grd.nc',
     grd.f.attrs['long_name'] = 'Coriolis parameter at RHO-points'
     grd.f.attrs['units'] = 'second-1'
     grd.f.attrs['field'] = 'Coriolis, scalar'
-    grd['angle'] = angle
+    grd['angle'] = angle * xr.ones_like(grd.pm).where(grd.pm)
     grd.f.attrs['long_name'] = 'angle between xi axis and east'
     grd.f.attrs['units'] = 'degree'
 
@@ -42,7 +42,7 @@ def make_grd(output='../tests/shelfstrat_grd.nc',
     grd.h.attrs['long_name'] = 'Final bathymetry at RHO-points'
     grd.h.attrs['units'] = 'meter'
     grd.h.attrs['field'] = 'bath, scalar'
-    print('Writing netcdf GRD file..')
+    print('Writing netcdf GRD file: '+output)
     grd.to_netcdf(output)
 
 
