@@ -13,8 +13,8 @@ def make_grd(output='../tests/shelfstrat_grd.nc',
              spherical=True,
              angle=0.):
 
-    x = np.arange(shp[1], dtype='d') * dx
-    y = np.arange(shp[0], dtype='d') * dy
+    x = np.arange(shp[1]+3, dtype='d') * dx
+    y = np.arange(shp[0]+3, dtype='d') * dy
     xvert, yvert = np.meshgrid(x, y)
     grd = make_CGrid(xvert, yvert)
 
@@ -36,7 +36,7 @@ def make_grd(output='../tests/shelfstrat_grd.nc',
 
     # create a depth profile with slope alpha, a value of Hmin
     # and a bump localized approximately at a depth ho, as a function of step height (dh) and width (wdh).
-    cff1 = alpha * grd.y_rho + dh * np.tanh((grd.y_rho - (ho - Hmin) / alpha) / wdh * 4) + 2 * Hmin
+    cff1 = alpha * grd.y_rho + .25 * dh * np.tanh((grd.y_rho - (ho - Hmin) / alpha) / wdh * 4) + 2 * Hmin
     cff1 += 0.01 * np.random.randn(*grd.y_rho.shape) * cff1
     grd['h'] = np.maximum(cff1, Hmin)
     grd.h.attrs['long_name'] = 'Final bathymetry at RHO-points'

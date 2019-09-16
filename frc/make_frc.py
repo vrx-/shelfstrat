@@ -8,8 +8,8 @@ def make_frc(output='../tests/shelfstrat_frc.nc',
              uwind=0.0, vwind=5.0, Cd=1.5e-3, Rho0=1027.,
              ndays=30, dtw=1 / 24, Tramp=3.0, Tflat=3.):
 
-    sustr0 = Cd / Rho0 * np.sqrt(uwind**2 + vwind**2) * uwind
-    svstr0 = Cd / Rho0 * np.sqrt(uwind**2 + vwind**2) * vwind
+    sustr0 = Cd * np.sqrt(uwind**2 + vwind**2) * uwind
+    svstr0 = Cd * np.sqrt(uwind**2 + vwind**2) * vwind
     t = xr.DataArray(np.arange(0, ndays+dtw, dtw), dims=['sms_time'])
     ramp = (1.0 - np.exp(-t / Tramp)) * np.sin(t * 2.0 * np.pi)
     nt = int(Tflat / dtw)

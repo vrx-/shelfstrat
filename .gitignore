@@ -11,11 +11,13 @@ sim*
 *.ipynb
 .ipynb_checkpoints/
 *.slurm
+*.mp4
 tests/
 project/Build
 project/coawst?
 runs/
 copy/
+bads/
 ocean_shelfstrat.*
 grd.pickle
 Shelf_Out*

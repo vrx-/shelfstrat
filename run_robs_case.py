@@ -59,7 +59,7 @@ class ROMS_in(object):
         self.variables[key] = str(val)
 
 
-def run_case(case, z0=0.003, dt=60.0, save=False, rootdir='./runs/'):
+def run_case(case, z0=0.003, dt=60.0, rootdir='./runs/'):
 
     print('BUILD new case' )
     if not os.path.exists(rootdir):
@@ -69,8 +69,8 @@ def run_case(case, z0=0.003, dt=60.0, save=False, rootdir='./runs/'):
     frc_str = 'vwind_' + str(int(case['frc']['vwind']))
     ID = grd_str + '_' + frc_str
     grd_name = rootdir + 'shelf_' + grd_str + '_grd.nc'
-    frc_name = rootdir + 'shelf_' + '_frc.nc'
-    ini_name = rootdir + 'shelf_' + ID + '_ini.nc'
+    frc_name = rootdir + 'shelf_' + frc_str + '_frc.nc'
+    ini_name = rootdir + 'shelf_' + grd_str + '_ini.nc'
 
     if not os.path.isfile(grd_name):
         make_grd(grd_name,
@@ -85,30 +85,31 @@ def run_case(case, z0=0.003, dt=60.0, save=False, rootdir='./runs/'):
                  shp=case['grd']['shp'])
     if not os.path.isfile(frc_name):
         make_frc(frc_name,
-                 uwind=case['frc']['u'],
-                 vwind=case['frc']['v'],
+                 uwind=case['frc']['uwind'],
+                 vwind=case['frc']['vwind'],
                  ndays=case['frc']['ndays'],
                  dtw = case['frc']['dtw'],
                  Tramp=case['frc']['Tramp'],
                  Tflat=case['frc']['Tflat'],
                  Cd=case['frc']['Cd'])
-    make_ini(ini_name, grd_name,
-             zlevs=case['ini']['zlevs'],
-             theta_s=case['ini']['theta_s'],
-             theta_b=case['ini']['theta_b'],
-             hc=case['ini']['hc'],
-             R0=case['ini']['R0'],
-             T0=case['ini']['T0'],
-             S0=case['ini']['S0'],
-             TCOEF=case['ini']['TCOEF'],
-             SCOEF=case['ini']['SCOEF'],
-             M20=case['ini']['M20'],
-             M2_yo=case['ini']['M2_yo'],
-             M2_r=case['ini']['M2_r'],
-             N20=case['ini']['N20'],
-             N2_zo=case['ini']['N2_zo'],
-             N2_r=case['ini']['N2_r'],
-             balanced_run=True)
+    if not os.path.isfile(ini_name):
+        make_ini(ini_name, grd_name,
+                 zlevs=case['ini']['zlevs'],
+                 theta_s=case['ini']['theta_s'],
+                 theta_b=case['ini']['theta_b'],
+                 hc=case['ini']['hc'],
+                 R0=case['ini']['R0'],
+                 T0=case['ini']['T0'],
+                 S0=case['ini']['S0'],
+                 TCOEF=case['ini']['TCOEF'],
+                 SCOEF=case['ini']['SCOEF'],
+                 M20=case['ini']['M20'],
+                 M2_yo=case['ini']['M2_yo'],
+                 M2_r=case['ini']['M2_r'],
+                 N20=case['ini']['N20'],
+                 N2_zo=case['ini']['N2_zo'],
+                 N2_r=case['ini']['N2_r'],
+                 balanced_run=True)
 
     infile = os.path.join(rootdir, 'ocean_shelf_' + ID + '.in')
     outfile = os.path.join(rootdir, 'ocean_shelf_' + ID + '.out')
@@ -116,15 +117,15 @@ def run_case(case, z0=0.003, dt=60.0, save=False, rootdir='./runs/'):
     rin_3d = ROMS_in('./project/ocean_shelfstrait.in')
     rin_3d['GRDNAME'] = grd_name
     rin_3d['FRCNAME'] = frc_name
-    rin_3d['HISNAME'] = os.path.join(rootdir, 'shelf_' + case['ID'] + '_his.nc')
-    rin_3d['AVGNAME'] = os.path.join(rootdir, 'shelf_' + case['ID'] + '_avg.nc')
-    rin_3d['DIANAME'] = os.path.join(rootdir, 'shelf_' + case['ID'] + '_dia.nc')
+    rin_3d['HISNAME'] = os.path.join(rootdir, 'shelf_' + ID + '_his.nc')
+    rin_3d['AVGNAME'] = os.path.join(rootdir, 'shelf_' + ID + '_avg.nc')
+    rin_3d['DIANAME'] = os.path.join(rootdir, 'shelf_' + ID + '_dia.nc')
     rin_3d['ININAME'] = ini_name
-    rin_3d['RSTNAME'] = os.path.join(rootdir, 'shelf_' + case['ID'] + '_rst.nc')
+    rin_3d['RSTNAME'] = os.path.join(rootdir, 'shelf_' + ID + '_rst.nc')
     rin_3d['VARNAME'] = './project/varinfo.dat'
 
-    rin_3d['Lm'] = case['grd']['shp'][1] - 3
-    rin_3d['Mm'] = case['grd']['shp'][0] - 3
+    rin_3d['Lm'] = case['grd']['shp'][1]
+    rin_3d['Mm'] = case['grd']['shp'][0]
     rin_3d['N'] = case['ini']['zlevs']
 
     rin_3d['NTIMES'] = int(86400 * case['frc']['ndays'] / dt)
@@ -139,10 +140,6 @@ def run_case(case, z0=0.003, dt=60.0, save=False, rootdir='./runs/'):
     print('RUN case ID %s' % ID)
     print(infile)
 
-    if save:
-        print(' ### Running 3D ROMS...')
-        os.system('/usr/mpi/gcc/openmpi-1.4.3/bin/mpiexec -np 8 ./project/coawstM %s > %s &' % (infile, outfile))
-
     return
 
 
@@ -150,16 +147,16 @@ if __name__ == '__main__':
 
     case = {'grd': {'Hmin': 5.0,
                     'alpha': 0.001,
-                    'ho': 5.,
-                    'dh': 0.,
+                    'ho': 20.,
+                    'dh': 10.,
                     'wdh': 1e4,
                     'f': 1e-4,
                     'dx': 1e3,
                     'dy': 1e3,
-                    'shp': (126+3, 256+3),
+                    'shp': (126, 256),
                     },
             'frc': {'uwind': 0.,
-                    'vwind': 0.,
+                    'vwind': 10.,
                     'Cd': 1.5e-3,
                     'Rho0': 1027.,
                     'ndays': 60,
