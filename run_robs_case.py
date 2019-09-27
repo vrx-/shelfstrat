@@ -34,7 +34,7 @@ class ROMS_in(object):
                     self._varlist.append(varname)
                     varval = vals[-1].strip()
                 elif same:
-                    varval = varval+'\n' +  line
+                    varval = varval+'\n' +  line.strip('\n')
                 else:
                     varname = 'none'
                     varval = 'none'
@@ -147,8 +147,8 @@ if __name__ == '__main__':
 
     case = {'grd': {'Hmin': 5.0,
                     'alpha': 0.001,
-                    'ho': 20.,
-                    'dh': 10.,
+                    'ho': 5.,
+                    'dh': 0.,
                     'wdh': 1e4,
                     'f': 1e-4,
                     'dx': 1e3,
@@ -156,7 +156,7 @@ if __name__ == '__main__':
                     'shp': (126, 256),
                     },
             'frc': {'uwind': 0.,
-                    'vwind': 10.,
+                    'vwind': 0.,
                     'Cd': 1.5e-3,
                     'Rho0': 1027.,
                     'ndays': 60,
@@ -182,4 +182,4 @@ if __name__ == '__main__':
                     },
             }
 
-    run_case(case)
+    run_case(case, dt=30.0)

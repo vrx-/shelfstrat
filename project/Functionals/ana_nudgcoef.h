@@ -135,42 +135,6 @@
         END DO
       END IF
 
-#elif defined SHELFSTRAIT
-      cff1=1.0_r8/(10.0_r8)
-      cff2=1.0_r8/(1000.0_r8)
-      DO j=MAX(JstrR,Mm(ng)-5),JendR
-        DO i=IstrR,IendR
-          wrk(i,j)=cff1+REAL(Mm(ng)-j,r8)*(cff2-cff1)/5.0_r8
-        END DO
-      END DO
-# ifdef M2CLM_NUDGING
-      DO j=JstrR,JendR
-        DO i=IstrR,IendR
-          CLIMA(ng)%M2nudgcof(i,j)=wrk(i,j)
-        END DO
-      END DO
-# endif
-# ifdef SOLVE3D
-      cff1=1.0_r8/(100.0_r8)
-      cff2=1.0_r8/(10000.0_r8)
-      DO j=MAX(JstrR,Mm(ng)-5),JendR
-        DO i=IstrR,IendR
-          wrk(i,j)=cff1+REAL(Mm(ng)-j,r8)*(cff2-cff1)/5.0_r8
-        END DO
-      END DO
-#  ifdef M3CLM_NUDGING                                                                                                           
-      DO k=1,N(ng)
-      DO j=JstrR,JendR
-        DO i=IstrR,IendR
-          CLIMA(ng)%M3nudgcof(i,j,k)=wrk(i,j)
-        END DO
-      END DO                                                                                                              
-      END DO
-                                                                                                                      
-#  endif
-# endif
-
-
 #elif defined DAMEE_4
 !
 !  Set tracer nudging coefficients in the southern and northern edges
@@ -211,6 +175,51 @@
         END DO
       END IF
 
+#elif defined SHELFSTRAIT
+!
+!  Set M2 nudging coefficients in the southern northern edges
+!  with a time scale ranging from 10 s at the boundary to 1000 s 
+!  five points in, linearly interpolated at the points in between. 
+!
+      cff1=1.0_r8/(10.0_r8)
+      cff2=1.0_r8/(1000.0_r8)
+      DO j=MAX(JstrR,Mm(ng)-5),JendR
+        DO i=IstrR,IendR
+          wrk(i,j)=cff1+REAL(Mm(ng)-j,r8)*(cff2-cff1)/5.0_r8
+        END DO
+      END DO
+      IF (LnudgeM2CLM(ng)) THEN
+          DO j=JstrR,JendR
+            DO i=IstrR,IendR
+              CLIMA(ng)%M2nudgcof(i,j)=wrk(i,j)
+            END DO
+          END DO
+      END IF
+
+# ifdef SOLVE3D
+!!
+!!  Set M3 nudging coefficients in the southern northern edges
+!!  with a time scale ranging from 100 s at the boundary to 10000 s 
+!!  five points in, linearly interpolated at the points in between.
+!!
+      cff1=1.0_r8/(100.0_r8)
+      cff2=1.0_r8/(10000.0_r8)
+      DO j=MAX(JstrR,Mm(ng)-5),JendR
+        DO i=IstrR,IendR
+          wrk(i,j)=cff1+REAL(Mm(ng)-j,r8)*(cff2-cff1)/5.0_r8
+        END DO
+      END DO
+      IF (LnudgeM3CLM(ng)) THEN
+          DO k=1,N(ng)
+              DO j=JstrR,JendR
+                DO i=IstrR,IendR
+                  CLIMA(ng)%M3nudgcof(i,j,k)=wrk(i,j)
+                END DO
+              END DO                       
+             END DO
+      END IF
+#  endif
+
 #else
 !
 !  Default nudging coefficients.  Set nudging coefficients uniformly to
@@ -249,6 +258,7 @@
       END IF
 # endif
 #endif
+
 #ifdef DISTRIBUTE
 !
 !-----------------------------------------------------------------------
