@@ -1,0 +1,34 @@
+#!/bin/sh
+
+### Set the job name
+#BSUB -J SHELF
+
+## send stderr and stdout to the same file 
+#BSUB -o ./log/log_shelf.%J
+
+## login shell to avoid copying env from login session
+## also helps the module function work in batch jobs
+#BSUB -L /bin/bash
+
+#BSUB -R "span[ptile=20]"
+
+export I_MPI_HYDRA_BRANCH_COUNT=8
+
+
+## numprocs
+#BSUB -n 160
+
+# load intel toolchain
+module load netCDF/4.4.1-intel-2016b
+module load netCDF-Fortran/4.4.4-intel-2016b
+module load flex/2.6.2-intel-2016b
+export NETCDF=$EBROOTNETCDFMINFORTRAN
+export NETCDF_INCDIR=$EBROOTNETCDFMINFORTRAN/include
+export NETCDF_LIBDIR=$EBROOTNETCDFMINFORTRAN/lib
+
+
+### You can override the default 1 hour real-world time limit.
+#BSUB -W 06:00
+
+
+mpirun -np 160 ./project/oceanM ./runs/ocean_shelfstrat.in
