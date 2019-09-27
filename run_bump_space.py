@@ -1,3 +1,13 @@
+#!/bin/env python3.7
+# encoding: utf-8
+"""
+run_case.py
+
+Created by Veronica Ruiz Xomchuk on 2019-09, modified from Rob Hetland base case
+Copyright (c) 2019 Texas A&M Univsersity. All rights reserved.
+Release under MIT license.
+"""
+
 from grd import make_grd
 from frc import make_frc
 from ini import make_ini
@@ -23,7 +33,7 @@ class ROMS_in(object):
                     self._varlist.append(varname)
                     varval = vals[-1].strip()
                 elif same:
-                    varval = varval+'\n' +  line
+                    varval = varval+'\n' +  line.strip('\n')
                 else:
                     varname = 'none'
                     varval = 'none'
@@ -81,26 +91,26 @@ def set_case(case, z0=0.003, dt=60.0, save=False, rootdir='./runs/'):
                  Tramp=case['frc']['Tramp'],
                  Tflat=case['frc']['Tflat'],
                  Cd=case['frc']['Cd'])
-    make_ini(ini_name, grd_name,
-             zlevs=case['ini']['zlevs'],
-             theta_s=case['ini']['theta_s'],
-             theta_b=case['ini']['theta_b'],
-             hc=case['ini']['hc'],
-             R0=case['ini']['R0'],
-             T0=case['ini']['T0'],
-             S0=case['ini']['S0'],
-             TCOEF=case['ini']['TCOEF'],
-             SCOEF=case['ini']['SCOEF'],
-             M20=case['ini']['M20'],
-             M2_yo=case['ini']['M2_yo'],
-             M2_r=case['ini']['M2_r'],
-             N20=case['ini']['N20'],
-             N2_zo=case['ini']['N2_zo'],
-             N2_r=case['ini']['N2_r'],
-             balanced_run=True)
+    if not os.path.isfile(ini_name):
+        make_ini(ini_name, grd_name,
+                 zlevs=case['ini']['zlevs'],
+                 theta_s=case['ini']['theta_s'],
+                 theta_b=case['ini']['theta_b'],
+                 hc=case['ini']['hc'],
+                 R0=case['ini']['R0'],
+                 T0=case['ini']['T0'],
+                 S0=case['ini']['S0'],
+                 TCOEF=case['ini']['TCOEF'],
+                 SCOEF=case['ini']['SCOEF'],
+                 M20=case['ini']['M20'],
+                 M2_yo=case['ini']['M2_yo'],
+                 M2_r=case['ini']['M2_r'],
+                 N20=case['ini']['N20'],
+                 N2_zo=case['ini']['N2_zo'],
+                 N2_r=case['ini']['N2_r'],
+                 balanced_run=True)
 
     infile = os.path.join(rootdir, 'ocean_shelf_' + ID + '.in')
-    outfile = os.path.join(rootdir, 'ocean_shelf_' + ID + '.out')
     # run 3D case
     rin_3d = ROMS_in('./project/ocean_shelfstrait.in')
     rin_3d['GRDNAME'] = grd_name
@@ -112,8 +122,8 @@ def set_case(case, z0=0.003, dt=60.0, save=False, rootdir='./runs/'):
     rin_3d['RSTNAME'] = os.path.join(rootdir, 'shelf_' + case['ID'] + '_rst.nc')
     rin_3d['VARNAME'] = './project/varinfo.dat'
 
-    rin_3d['Lm'] = case['grd']['shp'][1] - 3
-    rin_3d['Mm'] = case['grd']['shp'][0] - 3
+    rin_3d['Lm'] = case['grd']['shp'][1]
+    rin_3d['Mm'] = case['grd']['shp'][0]
     rin_3d['N'] = case['ini']['zlevs']
 
     rin_3d['NTIMES'] = int(86400 * case['frc']['ndays'] / dt)
@@ -127,8 +137,25 @@ def set_case(case, z0=0.003, dt=60.0, save=False, rootdir='./runs/'):
     rin_3d.write(infile)
     print('RUN case ID %s' % ID)
     print(infile)
+    return infile
 
 
+def make_jobfile(in_file, template='shelfstrat.LSF'):
+    ID = in_file.split('/')[-1].split('.')[0][6:]
+    jobfile = ID+'.LSF'
+    with open(jobfile,'w') as new_file:
+        with open(template) as old_file:
+            for line in old_file:
+                if '-J' in line:
+                    line = line.replace('SHELF', ID)
+                if '-o' in line:
+                    line = line.replace('log_shelf', 'log_'+ID)
+                if 'mpirun' in line:
+                    line = line.replace('runs/ocean_shelfstrat.in', in_file)
+                new_file.write(line)
+    return jobfile
+
+   
 base_case = {'grd': {'Hmin': 5.0,
                 'alpha': 0.001,
                 'ho': 5.,
@@ -179,4 +206,6 @@ for vwind in wind_list:
             case['frc']['vwind'] = vwind
             case['ID'] = 'ho_'+str(int(ho))+'_dh_'+str(int(dh))+'_wind_'+str(int(vwind))
 
-            set_case(case)
+            infile =set_case(case)
+            jobfile = make_jobfile(infile)
+            os.system("bsub < %s" % jobfile)
